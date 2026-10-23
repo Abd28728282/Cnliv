@@ -134,7 +134,7 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 (()=>{
 const $=s=>document.querySelector(s);
 const stage=$('#stage'),wrap=$('#wrap'),cur=$('#cur'),ring=cur.querySelector('.ring'),ico=cur.querySelector('.ico');
-const S={tool:'pen',prev:'pen',color:'#111827',size:14,op:100,sm:40,press:true,fill:false,z:1,font:'Tahoma,sans-serif',bold:false,italic:false,fs:36};
+const S={tool:'pen',prev:'pen',color:'#111827',size:14,op:100,sm:40,press:true,fill:false,z:1,font:'Tahoma,sans-serif',bold:false,italic:false,fs:36,hard:85};
 const PATH={hl:'M4 21h6M8 17l9-9 3 3-9 9H8zM17 8l-2-2 2-2 3 3z',ul:'M7 4v7a5 5 0 0010 0V4M5 21h14',st:'M4 12h16M16 7a4 4 0 00-4-2c-3 0-4 2-4 3.500M8 17a4 4 0 004 2c3 0 4-2 4-3.500',cm:'M4 5h16v11H10l-6 4zM8 9h8M8 12h5',select:'M5 3l13 8-6 2 3 6-2.5 1-3-6-4.5 4z',objdel:'M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M8 8l8 8M16 8l-8 8',logo:'M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z',open:'M3 6h6l2 2h10v11H3z',page:'M6 3h8l4 4v14H6zM14 3v4h4',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',minus:'M5 12h14',plus:'M12 5v14M5 12h14',fit:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',trash:'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14',image:'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M8 9h.01',pdf:'M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6',prev:'M15 5l-7 7 7 7',next:'M9 5l7 7-7 7',sliders:'M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6',pen:'M14 3l6 6-3 6-6 2-4-4 2-6zM3 21l8-8',pencil:'M3 21l1.5-5.5L16 4a2 2 0 013 0l1 1a2 2 0 010 3L8.5 19.5zM13.5 6.5l4 4',brush:'M3 21c2.500 0 4.500-.5 4.500-3a3 3 0 013-3l1 1a3 3 0 01-3 3c0 2-2 3-5.500 2zM11 14L20 4a1.500 1.500 0 012 2l-9 9',marker:'M4 21h6M7 17l-1 4M7 17l9-9 3 3-9 9zM16 8l2-2 3 3-2 2',callig:'M3 21l2-6 8-10 6 6-10 8zM5 15l4 4M14 5l5 5',spray:'M7 10h7v11H7zM9 10V7h3v3M16 5h.01M19 4h.01M19 8h.01M16 8h.01M21 6h.01',text:'M5 6V4h14v2M12 4v16M9 20h6',bucket:'M4 11l7-7 8 8-7 7zM4 11h15M20 16s2.500 2.500 0 4-2-1.500 0-4',eraser:'M20 20H9L4 15a2 2 0 010-3L13 3a2 2 0 013 0l5 5a2 2 0 010 3L12 20M7 12l6 6',seraser:'M20 20H9L4 15a2 2 0 010-3L13 3a2 2 0 013 0l5 5a2 2 0 010 3L12 20M7 12l6 6M3 20h.01M6 21h.01',line:'M4 20L20 4',rect:'M4 6h16v12H4z',ellipse:'M12 5c5 0 9 3 9 7s-4 7-9 7-9-3-9-7 4-7 9-7z',arrow:'M4 20L19 5M10 5h9v9',pick:'M20 4l-3-1-4 4-1-1-2 2 6 6 2-2-1-1 4-4zM11 11l-7 7v2h2l7-7',hand:'M8 12V5a1.500 1.500 0 013 0v6V4a1.500 1.500 0 013 0v7V6a1.500 1.500 0 013 0v8c0 5-3 7-6 7s-5-2-7-6l-1-2a1.500 1.500 0 012-1.500z'};
 const ic=(n,o)=>PATH[n]?`<svg class="i" viewBox="0 0 24 24">${o?`<path d="${PATH[n]}" style="stroke:#000;stroke-width:4.4"/>`:''}<path d="${PATH[n]}"${o?' style="stroke:#fff;stroke-width:2"':''}/></svg>`:'';
 const TOOLS=[['select','تحديد'],['objdel','حذف عنصر'],['pen','قلم'],['pencil','رصاص'],['brush','فرشاة'],['marker','ماركر'],['callig','خط عربي'],['spray','بخاخ'],['text','نص'],['bucket','تعبئة'],['hl','تظليل نص'],['ul','خط تحت نص'],['st','شطب نص'],['cm','تعليق'],['eraser','ممحاة'],['seraser','ممحاة ناعمة'],['line','خط'],['rect','مستطيل'],['ellipse','دائرة'],['arrow','سهم'],['pick','قطارة'],['hand','تحريك']];
@@ -268,8 +268,8 @@ function stamp(c,t,x,y,s){
   switch(t){
     case 'pen':case 'eraser':c.beginPath();c.arc(x,y,r,0,6.2832);c.fill();break;
     case 'seraser':{const g=c.createRadialGradient(x,y,0,x,y,r*1.2);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r*1.2,y-r*1.2,r*2.4,r*2.4);break}
-    case 'brush':{const g=c.createRadialGradient(x,y,0,x,y,r*1.25);g.addColorStop(0,`rgba(${R},${G},${B},.3)`);g.addColorStop(.55,`rgba(${R},${G},${B},.15)`);g.addColorStop(1,`rgba(${R},${G},${B},0)`);c.fillStyle=g;c.fillRect(x-r*1.25,y-r*1.25,r*2.5,r*2.5);c.fillStyle=S.color;break}
-    case 'pencil':{const n=Math.ceil(s*1.5)+3;for(let i=0;i<n;i++){const a=Math.random()*6.2832,d=Math.sqrt(Math.random())*r;c.fillStyle=`rgba(${R},${G},${B},${.25+Math.random()*.55})`;c.fillRect(x+Math.cos(a)*d,y+Math.sin(a)*d,1.3,1.3)}c.fillStyle=S.color;break}
+    case 'brush':{const hd=S.hard/100,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${R},${G},${B},1)`);g.addColorStop(Math.min(.98,hd),`rgba(${R},${G},${B},1)`);g.addColorStop(1,`rgba(${R},${G},${B},0)`);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.3);c.fill();c.fillStyle=S.color;break}
+    case 'pencil':{const n=Math.ceil(s*2.2)+4;for(let i=0;i<n;i++){const a=Math.random()*6.2832,d=Math.sqrt(Math.random())*r;c.fillStyle=`rgba(${R},${G},${B},${.5+Math.random()*.5})`;c.fillRect(x+Math.cos(a)*d,y+Math.sin(a)*d,1.3,1.3)}c.fillStyle=S.color;break}
     case 'marker':c.save();c.translate(x,y);c.rotate(-.785);c.fillRect(-r,-s*.17,s,s*.34);c.restore();break;
     case 'callig':c.beginPath();c.ellipse(x,y,r,Math.max(.7,s*.1),-.65,0,6.2832);c.fill();break;
     case 'spray':{const n=Math.ceil(s*1.4)+4;for(let i=0;i<n;i++){const a=Math.random()*6.2832,d=Math.sqrt(Math.random())*r*1.3;c.fillStyle=`rgba(${R},${G},${B},${.3+Math.random()*.6})`;c.fillRect(x+Math.cos(a)*d,y+Math.sin(a)*d,1.4,1.4)}c.fillStyle=S.color;break}
@@ -335,7 +335,7 @@ wrap.addEventListener('pointerdown',e=>{
   if(t==='pick'){pickColor(e);return}
   if(t==='text'){const h=hit(q);if(h&&h.t)editText(h);else startText(e);return}
   if(t==='bucket'){bucket(e);return}
-  if(MARK[t]){if(!p.chars||!p.chars.length){if(p.ocrDone)toast('لم يُعثر على نص في هذه الصفحة');else ocrPage(p);return}
+  if(MARK[t]){if(!p.chars||p.chars.length<25){if(!p.ocrDone&&!p.ocrTried){ocrPage(p);return}if(!p.chars||!p.chars.length){toast(p.ocrTried?'لا يوجد نص قابل للتحديد — شغّل OCR من النسخة المحمّلة':'لم يُعثر على نص في هذه الصفحة');return}}
     drawing=true;pid=e.pointerId;mode='mark';tA=tB=nearChar(p,q);tsel=selRects(p,tA,tA);drawSel();return}
   drawing=true;pid=e.pointerId;preSnap=snap(p);start=q;
   if(t==='select'){
@@ -614,26 +614,26 @@ function ocrChars(d){
 }
 async function ocrPage(p){
   if(p.ocrBusy)return;
-  if(!window.Tesseract){toast('التعرف على النص غير متاح هنا — استخدم النسخة المحمّلة مع اتصال بالإنترنت');return}
+  if(!window.Tesseract){p.ocrTried=true;toast('محرك التعرف على النص غير متاح هنا — افتح النسخة المحمّلة draw-studio-offline مع اتصال بالإنترنت');return}
   p.ocrBusy=true;toast('جاري التعرف على النص… قد يستغرق دقيقة');let got=false;
   try{
     const r=await Promise.race([
-      Tesseract.recognize(p.bg,'ara+eng',{logger:m=>{got=true;if(m.status==='recognizing text')toast('التعرف على النص '+Math.round(m.progress*100)+'%')}}),
-      new Promise((_,j)=>setTimeout(()=>{if(!got)j(new Error('blocked'))},25000))]);
+      Tesseract.recognize(p.bg,'ara+eng',{workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',logger:m=>{got=true;if(m.status==='recognizing text')toast('التعرف على النص '+Math.round(m.progress*100)+'%')}}),
+      new Promise((_,j)=>setTimeout(()=>{if(!got)j(new Error('blocked'))},15000))]);
     p.chars=ocrChars(r.data);p.ocrDone=true;
     toast(p.chars.length?'اكتمل التعرف — حدّد النص الآن':'لم يُعثر على نص في هذه الصفحة');
-  }catch(e){toast('تعذّر التعرف على النص — يعمل في النسخة المحمّلة مع اتصال بالإنترنت')}
+  }catch(e){p.ocrTried=true;toast('تعذّر التعرف على النص ('+((e&&e.message)||e)+') — يعمل في النسخة المحمّلة draw-studio-offline مع إنترنت')}
   p.ocrBusy=false;
 }
 /* ---------- compact top toolbar ---------- */
-Object.assign(PATH,{chev:'M6 9l6 6 6-6',op:'M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z',sm:'M3 12c3-6 6-6 9 0s6 6 9 0',more:'M5 12h.01M12 12h.01M19 12h.01'});
+Object.assign(PATH,{hd:'M12 4a8 8 0 100 16 8 8 0 000-16zM12 4v16',scan:'M4 8V4h4M16 4h4v4M4 16v4h4M20 16v4h-4M7 9h10M7 12h10M7 15h6',chev:'M6 9l6 6 6-6',op:'M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z',sm:'M3 12c3-6 6-6 9 0s6 6 9 0',more:'M5 12h.01M12 12h.01M19 12h.01'});
 const tb=$('#tb');tb.appendChild(tl);
 ['objdel','spray','cm','seraser','arrow'].forEach(id=>{const sp_=document.createElement('span');sp_.className='sep';tl.querySelector(`[data-t=${id}]`).after(sp_)});
 const sep2=document.createElement('span');sep2.className='sep';tb.appendChild(sep2);tb.appendChild($('#cp'));
 const dd=(id,t)=>{const b=document.createElement('button');b.className='dd';b.id=id;b.title=t;tb.appendChild(b);return b};
-const ddSize=dd('ddSize','الحجم'),ddOp=dd('ddOp','الشفافية'),ddSm=dd('ddSm','التنعيم');
+const ddSize=dd('ddSize','الحجم'),ddOp=dd('ddOp','الشفافية'),ddSm=dd('ddSm','التنعيم'),ddHd=dd('ddHd','حدّة حواف الفرشاة');
 tb.appendChild($('#sFont'));
-const tbB=dd('tbB','عريض'),tbI=dd('tbI','مائل'),ddMore=dd('ddMore','المزيد');
+const tbB=dd('tbB','عريض'),tbI=dd('tbI','مائل'),ddOcr=dd('ddOcr','التعرف على النص (OCR) في هذه الصفحة'),ddMore=dd('ddMore','المزيد');
 tbB.textContent='B';tbI.textContent='I';tbB.style.fontWeight='800';tbI.style.cssText='font-style:italic;font-family:serif';
 const mn=document.createElement('div');mn.id='mn';document.body.appendChild(mn);
 function pop(btn,items,cur,pick,cols){
@@ -645,13 +645,15 @@ addEventListener('pointerdown',e=>{if(!mn.contains(e.target)&&!e.target.closest(
 function ctxText(){if(S.tool==='text'||ta)return true;if(S.tool!=='select'||sel.size!==1)return false;const o=P().objs.find(o=>sel.has(o.id));return !!(o&&o.t)}
 function updTb(){
   const c=ctxText();ddSize.innerHTML=ic(c?'text':'pen')+'<span>'+(c?S.fs:S.size)+'</span>'+ic('chev');ddSize.title=c?'حجم الخط':'حجم الفرشاة';
-  ddOp.innerHTML=ic('op')+'<span>'+S.op+'%</span>'+ic('chev');ddSm.innerHTML=ic('sm')+'<span>'+S.sm+'%</span>'+ic('chev');ddMore.innerHTML=ic('more');
+  ddOp.innerHTML=ic('op')+'<span>'+S.op+'%</span>'+ic('chev');ddSm.innerHTML=ic('sm')+'<span>'+S.sm+'%</span>'+ic('chev');ddMore.innerHTML=ic('more');ddHd.innerHTML=ic('hd')+'<span>'+S.hard+'%</span>'+ic('chev');ddOcr.innerHTML=ic('scan')+'<span>OCR</span>';
   tbB.classList.toggle('on',S.bold);tbI.classList.toggle('on',S.italic);
 }
 ddSize.onclick=()=>{if(ctxText())pop(ddSize,[10,12,14,16,18,20,24,28,32,36,42,48,60,72,96,120,160,200,260,320].map(v=>[v,v]),S.fs,v=>{S.fs=v;updTb();if(ta)applyTaStyle();else restyle('size')},5);
   else pop(ddSize,[1,2,3,4,5,6,8,10,12,14,16,20,24,28,32,40,48,64,80,100,128,160,200,300].map(v=>[v,v]),S.size,v=>{S.size=v;syncSize()},6)};
 ddOp.onclick=()=>pop(ddOp,[100,90,75,60,45,30,15].map(v=>[v,v+'%']),S.op,v=>{S.op=v;$('#ro').value=v;$('#vo').textContent=v+'%';updTb()},4);
 ddSm.onclick=()=>pop(ddSm,[0,20,40,60,80,95].map(v=>[v,v+'%']),S.sm,v=>{S.sm=v;$('#rm').value=v;updTb()},3);
+ddHd.onclick=()=>pop(ddHd,[100,85,65,45,25].map(v=>[v,v+'%']),S.hard,v=>{S.hard=v;updTb()},5);
+ddOcr.onclick=()=>{const p=P();p.ocrTried=false;ocrPage(p)};
 tbB.onclick=()=>{S.bold=!S.bold;$('#cB').checked=S.bold;updCur();restyle('font')};
 tbI.onclick=()=>{S.italic=!S.italic;$('#cI').checked=S.italic;updCur();restyle('font')};
 ddMore.onclick=()=>pop(ddMore,[['fill','تعبئة الأشكال: '+(S.fill?'مفعّلة':'متوقفة')],['press','حساسية قلم الشاشة: '+(S.press?'مفعّلة':'متوقفة')],['ocr','التعرف على النص (OCR) في هذه الصفحة'],['help','اختصارات لوحة المفاتيح']],null,v=>{
