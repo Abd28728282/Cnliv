@@ -596,23 +596,43 @@ function applyRz(){
     else{const n=mk(Math.max(1,Math.round(e.c.width*sx)),Math.max(1,Math.round(e.c.height*sy))),c=n.getContext('2d');c.imageSmoothingQuality='high';c.drawImage(e.c,0,0,n.width,n.height);o.c=n}});
   render();
 }
+const DEFAULT_FONT='system-ui,"Segoe UI",Tahoma,Arial,sans-serif',_fc=document.createElement('canvas').getContext('2d'),_fcache=new Map();
+function hasFont(name){
+  if(_fcache.has(name))return _fcache.get(name);
+  const t='mmmmmmmmmmlliWM0123456789ءآأإابتثجحخدذرزسشصضطظعغفقكلمنهويىئؤة',w=f=>{_fc.font='72px '+f;return _fc.measureText(t).width};
+  const r=['monospace','sans-serif','serif'].some(g=>{_fc.font=`72px "${name}",${g}`;return _fc.measureText(t).width!==w(g)});
+  _fcache.set(name,r);return r;
+}
+const FALIAS={arial:'Arial',timesnewroman:'Times New Roman',couriernew:'Courier New',courier:'Courier New',times:'Times New Roman',segoeui:'Segoe UI',trebuchetms:'Trebuchet MS',comicsansms:'Comic Sans MS',lucidasans:'Lucida Sans',calibri:'Calibri',cambria:'Cambria',tahoma:'Tahoma',verdana:'Verdana',georgia:'Georgia'};
 function fontInfo(pg,name,cache){
   if(cache.has(name))return cache.get(name);let r=null;
-  try{if(pg.commonObjs.has(name)){const f=pg.commonObjs.get(name),l=(f.name||'').replace(/^[A-Z]{6}\+/,'').toLowerCase();
-    const fam=/arab|naskh|kufi|amiri|traditional|simplified|nazanin|lotus|badr/.test(l)?'Amiri,"Traditional Arabic","Simplified Arabic",Tahoma,serif':/courier|mono|consolas/.test(l)?'"Courier New",monospace':(/times|serif|georgia|garamond|minion|palatino|cambria|roman/.test(l)&&!/sans/.test(l))?'"Times New Roman",Georgia,serif':'Arial,Helvetica,"Segoe UI",Tahoma,sans-serif';
-    r={font:(f.loadedName?'"'+f.loadedName+'",':'')+fam,bold:!!f.bold||/bold|black|heavy/.test(l),italic:!!f.italic||/italic|oblique/.test(l)}}}catch(_){}
+  try{if(pg.commonObjs.has(name)){
+    const f=pg.commonObjs.get(name),orig=(f.name||'').replace(/^[A-Z]{6}\+/,''),l=orig.toLowerCase(),base=orig.split(/[-,]/)[0].replace(/_/g,' ').trim();
+    const key=base.toLowerCase().replace(/\s/g,'').replace(/(psmt|mt|ps)$/,''),spaced=base.replace(/(MT|PSMT|PS)$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').trim();
+    const merged=spaced.split(' ').reduce((a,t)=>{if(t.length<=2&&a.length)a[a.length-1]+=t;else a.push(t);return a},[]).join(' '),found=[FALIAS[key],spaced,merged,base].filter(Boolean).find(hasFont);
+    r={font:found?`"${found}",system-ui,sans-serif`:DEFAULT_FONT,exact:!!found,label:found||'خط النظام',orig:orig||'؟',bold:!!f.bold||/bold|black|heavy/.test(l),italic:!!f.italic||/italic|oblique/.test(l)};
+  }}catch(_){}
   cache.set(name,r);return r;
 }
-function setFont(stack){
+function setFont(stack,label){
   S.font=stack;const sl=$('#sFont');[...sl.options].filter(o=>o.dataset.c&&o.value!==stack).forEach(o=>o.remove());
-  if(![...sl.options].some(o=>o.value===stack)){const o=new Option('الخط الأصلي',stack);o.dataset.c=1;sl.add(o,0)}sl.value=stack;
+  if(![...sl.options].some(o=>o.value===stack)){const o=new Option(label||'الخط الأصلي',stack);o.dataset.c=1;sl.add(o,0)}sl.value=stack;
+}
+function lineText(L){
+  const items=[];L.forEach(c=>{const last=items[items.length-1];if(last&&last.id===c.it)last.ch.push(c);else items.push({id:c.it,ch:[c]})});
+  items.forEach(i=>{i.x0=Math.min(...i.ch.map(c=>c.x));i.x1=Math.max(...i.ch.map(c=>c.x+c.w))});
+  const rtl=L.filter(c=>/[\u0590-\u06FF]/.test(c.c)).length>L.filter(c=>/[A-Za-z]/.test(c.c)).length;
+  items.sort((a,b)=>rtl?b.x1-a.x1:a.x0-b.x0);
+  let out='',prev=null;
+  for(const i of items){const t=i.ch.map(c=>c.c).join('');if(prev){const gap=rtl?prev.x0-i.x1:i.x0-prev.x1;if(gap>L[0].h*.25&&!/\s$/.test(out)&&!/^\s/.test(t))out+=' '}out+=t;prev=i}
+  return out.replace(/\s+$/,'').normalize('NFKC');
 }
 function buildChars(tc,v,pg){
-  const out=[],m=mk(1,1).getContext('2d'),fc=new Map();
+  const out=[],m=mk(1,1).getContext('2d'),fc=new Map();let iid=0;
   for(const it of tc.items){if(!it.str)continue;
-    const f=fontInfo(pg,it.fontName,fc),t=pdfjsLib.Util.transform(v.transform,it.transform),fh=Math.hypot(t[2],t[3])||10,w=it.width*v.scale,x=t[4],yb=t[5],rtl=it.dir==='rtl',cs=[...it.str];
+    iid++;const f=fontInfo(pg,it.fontName,fc),t=pdfjsLib.Util.transform(v.transform,it.transform),fh=Math.hypot(t[2],t[3])||10,w=it.width*v.scale,x=t[4],yb=t[5],rtl=it.dir==='rtl',cs=[...it.str];
     m.font=`${fh}px sans-serif`;const ws=cs.map(c=>m.measureText(c).width||1),sum=ws.reduce((a,b)=>a+b,0)||1;let acc=0;
-    cs.forEach((c,i)=>{const cw=ws[i]/sum*w,cx=rtl?x+w-acc-cw:x+acc;acc+=cw;out.push({c,x:cx,y:yb-fh*.85,w:cw,h:fh*1.1,f})})}
+    cs.forEach((c,i)=>{const cw=ws[i]/sum*w,cx=rtl?x+w-acc-cw:x+acc;acc+=cw;out.push({c,x:cx,y:yb-fh*.85,w:cw,h:fh*1.1,f,it:iid})})}
   return out;
 }
 function nearChar(p,q){let best=0,bd=1e18;p.chars.forEach((c,i)=>{const dx=Math.max(c.x-q.x,0,q.x-c.x-c.w),dy=Math.max(c.y-q.y,0,q.y-c.y-c.h),d=dx*dx+dy*dy*4;if(d<bd){bd=d;best=i}});return best}
@@ -674,13 +694,14 @@ function retextAt(e){
   if(q.x<c0.x-c0.h||q.x>c0.x+c0.w+c0.h||q.y<c0.y-c0.h*.6||q.y>c0.y+c0.h*1.6){toast('انقر على سطر نص لتعديله');return}
   const row=i=>Math.abs(p.chars[i].y-c0.y)<c0.h*.5,gap=(i,j)=>{const A=p.chars[i],B=p.chars[j];return Math.max(0,Math.max(A.x,B.x)-Math.min(A.x+A.w,B.x+B.w))};
   while(a>0&&row(a-1)&&gap(a-1,a)<c0.h*1.6)a--;while(b<p.chars.length-1&&row(b+1)&&gap(b,b+1)<c0.h*1.6)b++;
-  const r=selRects(p,a,b)[0],text=p.chars.slice(a,b+1).map(c=>c.c).join('').replace(/\s+$/,''),an=analyze(p,r);
+  const r=selRects(p,a,b)[0],text=lineText(p.chars.slice(a,b+1)),an=analyze(p,r);
   S.fs=Math.max(8,Math.round(p.ocrDone?c0.h*.85:c0.h/1.1));setColor(toHex(an.ink));
-  if(c0.f){setFont(c0.f.font);S.bold=c0.f.bold;S.italic=c0.f.italic;$('#cB').checked=S.bold;$('#cI').checked=S.italic}updTb();
+  let fm='عدّل النص';
+  if(c0.f){setFont(c0.f.font,c0.f.label);S.bold=c0.f.bold;S.italic=c0.f.italic;$('#cB').checked=S.bold;$('#cI').checked=S.italic;fm=c0.f.exact?'نفس خط الملف: '+c0.f.label:'خط الملف «'+c0.f.orig+'» غير مثبّت عندك — استُخدم خط النظام، يمكنك تغييره'}updTb();
   const rtl=/[\u0590-\u06FF]/.test(text),cy=(r.y+r.y1)/2;
   openTa(r.x0,cy-S.fs*.625,text);rtx={r,bg:an.bg};updTb();ta.style.background=`rgb(${an.bg})`;
   if(rtl){tx.x=r.x1-ta.offsetWidth/S.z;applyTaStyle()}
-  setTimeout(()=>ta&&ta.select(),40);toast('عدّل النص (عربي أو إنجليزي) ثم المس خارج الصندوق للتثبيت — فارغ = حذف السطر');
+  setTimeout(()=>ta&&ta.select(),40);toast(fm+' · المس خارج الصندوق للتثبيت · فارغ = حذف السطر');
 }
 /* ---------- lift images / image-text out of the page ---------- */
 function finishLift(e){
@@ -712,12 +733,12 @@ function saveSel(){
 }
 /* ---------- OCR (any text in images / scanned PDFs) ---------- */
 const _m=mk(1,1).getContext('2d');
-function spreadChars(cs,x,top,w,h,rtl,out){_m.font=`${h}px sans-serif`;const ws=cs.map(c=>_m.measureText(c).width||1),sum=ws.reduce((a,b)=>a+b,0)||1;let acc=0;cs.forEach((c,i)=>{const cw=ws[i]/sum*w,cx=rtl?x+w-acc-cw:x+acc;acc+=cw;out.push({c,x:cx,y:top,w:cw,h})})}
+function spreadChars(cs,x,top,w,h,rtl,out,it){_m.font=`${h}px sans-serif`;const ws=cs.map(c=>_m.measureText(c).width||1),sum=ws.reduce((a,b)=>a+b,0)||1;let acc=0;cs.forEach((c,i)=>{const cw=ws[i]/sum*w,cx=rtl?x+w-acc-cw:x+acc;acc+=cw;out.push({c,x:cx,y:top,w:cw,h,it})})}
 function ocrChars(d){
   let W=d.words;if(!W||!W.length){W=[];(d.blocks||[]).forEach(b=>b.paragraphs.forEach(pa=>pa.lines.forEach(l=>l.words.forEach(w=>W.push(w)))))}
   const out=[];
-  W.forEach(w=>{const t=(w.text||'').trim(),bb=w.bbox;if(!t||!bb||w.confidence<25)return;const h=bb.y1-bb.y0;
-    spreadChars([...t],bb.x0,bb.y0,bb.x1-bb.x0,h,/[\u0590-\u06FF]/.test(t),out);out.push({c:' ',x:bb.x1,y:bb.y0,w:4,h})});
+  let k=0;W.forEach(w=>{const t=(w.text||'').trim(),bb=w.bbox;k++;if(!t||!bb||w.confidence<25)return;const h=bb.y1-bb.y0;
+    spreadChars([...t],bb.x0,bb.y0,bb.x1-bb.x0,h,/[\u0590-\u06FF]/.test(t),out,k);out.push({c:' ',x:bb.x1,y:bb.y0,w:4,h,it:k})});
   return out;
 }
 async function ocrPage(p){
@@ -764,8 +785,8 @@ ddHd.onclick=()=>pop(ddHd,[100,85,65,45,25].map(v=>[v,v+'%']),S.hard,v=>{S.hard=
 ddOcr.onclick=()=>{const p=P();p.ocrTried=false;ocrPage(p)};
 tbB.onclick=()=>{S.bold=!S.bold;$('#cB').checked=S.bold;updCur();restyle('font')};
 tbI.onclick=()=>{S.italic=!S.italic;$('#cI').checked=S.italic;updCur();restyle('font')};
-ddMore.onclick=()=>pop(ddMore,[['fill','تعبئة الأشكال: '+(S.fill?'مفعّلة':'متوقفة')],['press','حساسية قلم الشاشة: '+(S.press?'مفعّلة':'متوقفة')],['ocr','التعرف على النص (OCR) في هذه الصفحة'],['help','اختصارات لوحة المفاتيح']],null,v=>{
-  if(v==='fill')S.fill=!S.fill;else if(v==='press')S.press=!S.press;else if(v==='ocr')ocrPage(P());else toast('Ctrl+Z تراجع · Ctrl+A تحديد الكل · Delete حذف · Space تحريك الصفحة · [ ] حجم الفرشاة')},1);
+ddMore.onclick=()=>pop(ddMore,[['fill','تعبئة الأشكال: '+(S.fill?'مفعّلة':'متوقفة')],['press','حساسية قلم الشاشة: '+(S.press?'مفعّلة':'متوقفة')],['ocr','التعرف على النص (OCR) في هذه الصفحة'],['rev','عكس ترتيب حروف النص المفتوح'],['help','اختصارات لوحة المفاتيح']],null,v=>{
+  if(v==='fill')S.fill=!S.fill;else if(v==='press')S.press=!S.press;else if(v==='ocr')ocrPage(P());else if(v==='rev'){if(ta){ta.value=[...ta.value].reverse().join('');ta.oninput()}else toast('افتح سطرًا بأداة تعديل النص أولًا')}else toast('Ctrl+Z تراجع · Ctrl+A تحديد الكل · Delete حذف · Space تحريك الصفحة · [ ] حجم الفرشاة')},1);
 $('#bProps').style.display='none';
 /* ---------- icons init ---------- */
 const MAP={bOpen:'open',bNew:'page',bUndo:'undo',bRedo:'redo',bZo:'minus',bZi:'plus',bFit:'fit',bProps:'sliders',bClr:'trash',bPng:'image',bPdf:'pdf',pPrev:'prev',pNext:'next',pDel:'trash'};
