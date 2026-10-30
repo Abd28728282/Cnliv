@@ -897,6 +897,18 @@ $('#wmOk').onclick=()=>{const text=$('#wmt').value.trim();if(!text)return;wm.sty
     rotObj(o,-30);p.hist.push(snap(p));p.redo=[];p.objs.push(o);if(p===P()){setTool('select');sel.clear();sel.add(o.id)}});
   render();upd();toast('أُضيفت العلامة المائية')};
 mi('bWm','علامة مائية','text',showWM);
+const imgIn=document.createElement('input');imgIn.type='file';imgIn.accept='image/*';imgIn.multiple=true;imgIn.hidden=true;document.body.appendChild(imgIn);
+async function addImgs(files){
+  commitText();const p=P();let last=null;
+  for(const f of files){let bmp;try{bmp=await createImageBitmap(f)}catch(_){toast('تعذّر قراءة الصورة: '+f.name);continue}
+    const k=Math.min(1,p.w*.5/bmp.width,p.h*.5/bmp.height),w=Math.max(1,Math.round(bmp.width*k)),h=Math.max(1,Math.round(bmp.height*k)),c=mk(w,h),x=c.getContext('2d');
+    x.imageSmoothingQuality='high';x.drawImage(bmp,0,0,w,h);
+    const s=snap(p),o={id:oid++,c,x:Math.round((p.w-w)/2),y:Math.round((p.h-h)/2),t:null};p.objs.push(o);pushHist(s);last=o}
+  if(last){setTool('select');sel.clear();sel.add(last.id);render();toast('أُضيفت الصورة — اسحبها، غيّر حجمها من المقابض، أو دوّرها')}
+}
+imgIn.onchange=e=>{addImgs([...e.target.files]);e.target.value=''};
+mi('bImg','إضافة صورة من الجهاز','image',()=>imgIn.click());
+const ddImg=dd('ddImg','إضافة صورة من الجهاز');ddImg.innerHTML=ic('image')+'<span>+</span>';ddImg.onclick=()=>imgIn.click();
 const ddWm=dd('ddWm','علامة مائية');ddWm.innerHTML=ic('logo')+'<span>WM</span>';ddWm.onclick=showWM;
 ['Amiri','Noto Naskh Arabic'].forEach(gfLoad);
 /* ---------- init ---------- */
