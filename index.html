@@ -97,7 +97,7 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 .ldb{width:min(420px,80%);height:12px;border-radius:99px;background:var(--line);overflow:hidden}.ldb i{display:block;height:100%;width:0;background:var(--acc);border-radius:99px;transition:width .2s}
 .ldt{font-size:16px;font-weight:700}.ldp{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
 body.busy header,body.busy #tb{pointer-events:none;opacity:.5}
-</style>
+#selbar{flex-wrap:wrap;justify-content:center;max-width:96%}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -474,13 +474,13 @@ $('#bPdf').onclick=async()=>{
 
 /* ---------- text, bucket, restyle ---------- */
 function renderText(t){
-  const F=`${t.italic?'italic ':''}${t.bold?'bold ':''}${t.fs}px ${t.font}`,L=t.text.split('\n'),lh=t.fs*1.25,m=mk(1,1).getContext('2d');m.font=F;
+  const F=`${t.italic?'italic ':''}${t.bold?'bold ':''}${t.fs}px ${t.font}${AR}`,L=t.text.split('\n'),lh=t.fs*1.25,m=mk(1,1).getContext('2d');m.font=F;
   const w=Math.ceil(Math.max(20,...L.map(l=>m.measureText(l).width)))+2,c=mk(w+8,Math.ceil(L.length*lh)+8),x=c.getContext('2d');
   x.globalAlpha=t.op;x.fillStyle=t.color;x.font=F;x.textBaseline='middle';
   L.forEach((l,i)=>{const m1=l.match(/[A-Za-z\u0590-\u06FF]/),r=!!m1&&/[\u0590-\u06FF]/.test(m1[0]);x.direction=r?'rtl':'ltr';x.textAlign=r?'right':'left';x.fillText(l,r?4+w:4,4+i*lh+lh/2)});
   return c;
 }
-function applyTaStyle(){if(!ta)return;tx.fs=S.fs;Object.assign(ta.style,{fontSize:tx.fs*S.z+'px',color:S.color,fontFamily:S.font,fontWeight:S.bold?700:400,fontStyle:S.italic?'italic':'normal',left:tx.x*S.z+'px',top:tx.y*S.z+'px'});ta.oninput&&ta.oninput()}
+function applyTaStyle(){if(!ta)return;tx.fs=S.fs;Object.assign(ta.style,{fontSize:tx.fs*S.z+'px',color:S.color,fontFamily:S.font+AR,fontWeight:S.bold?700:400,fontStyle:S.italic?'italic':'normal',left:tx.x*S.z+'px',top:tx.y*S.z+'px'});ta.oninput&&ta.oninput()}
 function openTa(x,y,val){
   tx={x,y,fs:0};ta=document.createElement('textarea');ta.id='ta';ta.rows=1;ta.dir='auto';ta.spellcheck=false;ta.wrap='off';ta.value=val;
   ta.addEventListener('pointerdown',v=>v.stopPropagation());
@@ -605,7 +605,7 @@ function applyRz(){
     else{const n=mk(Math.max(1,Math.round(e.c.width*sx)),Math.max(1,Math.round(e.c.height*sy))),c=n.getContext('2d');c.imageSmoothingQuality='high';c.drawImage(e.c,0,0,n.width,n.height);o.c=n}});
   render();
 }
-const DEFAULT_FONT='system-ui,"Segoe UI",Tahoma,Arial,sans-serif',_fc=document.createElement('canvas').getContext('2d'),_fcache=new Map();
+const AR=',"Amiri Quran","Amiri","Noto Naskh Arabic"',DEFAULT_FONT='system-ui,"Segoe UI",Tahoma,Arial'+AR+',sans-serif',_fc=document.createElement('canvas').getContext('2d'),_fcache=new Map();
 function hasFont(name){
   if(_fcache.has(name))return _fcache.get(name);
   const t='mmmmmmmmmmlliWM0123456789ءآأإابتثجحخدذرزسشصضطظعغفقكلمنهويىئؤة',w=f=>{_fc.font='72px '+f;return _fc.measureText(t).width};
@@ -620,7 +620,7 @@ function fontInfo(pg,name,cache){
     const f=pg.commonObjs.get(name),orig=(f.name||'').replace(/^[A-Z]{6}\+/,''),l=orig.toLowerCase(),base=orig.split(/[-,]/)[0].replace(/_/g,' ').trim();
     const key=base.toLowerCase().replace(/\s/g,'').replace(/(psmt|mt|ps)$/,''),spaced=base.replace(/(MT|PSMT|PS)$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').trim();
     const merged=spaced.split(' ').reduce((a,t)=>{if(t.length<=2&&a.length)a[a.length-1]+=t;else a.push(t);return a},[]).join(' '),found=[FALIAS[key],spaced,merged,base].filter(Boolean).find(hasFont);
-    r={font:found?`"${found}",system-ui,sans-serif`:DEFAULT_FONT,exact:!!found,label:found||'خط النظام',orig:orig||'؟',gf:[...new Set([spaced,merged,base,FGF[key]].filter(Boolean))],bold:!!f.bold||/bold|black|heavy/.test(l),italic:!!f.italic||/italic|oblique/.test(l)};
+    r={font:found?`"${found}",system-ui${AR},sans-serif`:DEFAULT_FONT,exact:!!found,label:found||'خط النظام',orig:orig||'؟',gf:[...new Set([spaced,merged,base,FGF[key]].filter(Boolean))],bold:!!f.bold||/bold|black|heavy/.test(l),italic:!!f.italic||/italic|oblique/.test(l)};
   }}catch(_){}
   cache.set(name,r);return r;
 }
@@ -642,7 +642,7 @@ function gfLoad(name){
 }
 async function ensureFont(f){
   if(!f||f.exact)return f;
-  for(const n of f.gf||[]){if(await gfLoad(n))return{...f,font:'"'+n+'",system-ui,sans-serif',exact:true,loaded:true,label:n}}
+  for(const n of f.gf||[]){if(await gfLoad(n))return{...f,font:'"'+n+'",system-ui'+AR+',sans-serif',exact:true,loaded:true,label:n}}
   return f;
 }
 function lineText(L){
@@ -652,7 +652,7 @@ function lineText(L){
   items.sort((a,b)=>rtl?b.x1-a.x1:a.x0-b.x0);
   let out='',prev=null;
   for(const i of items){const t=i.ch.map(c=>c.c).join('');if(prev){const gap=rtl?prev.x0-i.x1:i.x0-prev.x1;if(gap>L[0].h*.25&&!/\s$/.test(out)&&!/^\s/.test(t))out+=' '}out+=t;prev=i}
-  return out.replace(/\s+$/,'').normalize('NFKC');
+  return out.replace(/[\uE000-\uF8FF\uFFFD]/g,'').replace(/\s+$/,'').normalize('NFKC');
 }
 function buildChars(tc,v,pg){
   const out=[],m=mk(1,1).getContext('2d'),fc=new Map();let iid=0;
@@ -720,7 +720,7 @@ function makePatch(p,r,bg){
   const img=oc.createImageData(W,H),o=img.data,dil=new Uint8Array(W*H);
   for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++)if(sel[y*W+xx])for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const nx=xx+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)dil[ny*W+nx]=1}
   for(let i=0;i<W*H;i++)if(dil[i]){const j=i*4;o[j]=bg[0];o[j+1]=bg[1];o[j+2]=bg[2];o[j+3]=255}
-  oc.putImageData(img,0,0);return{c:out,x:X0,y:Y0};
+  oc.putImageData(img,0,0);oc.fillStyle=`rgb(${bg})`;oc.fillRect(Math.max(0,r.x0-X0-1),Math.max(0,r.y-Y0),r.x1-r.x0+2,h);return{c:out,x:X0,y:Y0};
 }
 function onPatch(p,q){
   const r=Math.ceil(5/S.z);
@@ -750,6 +750,7 @@ async function retextAt(e){
   while(a>0&&row(a-1)&&gap(a-1,a)<c0.h*1.6)a--;while(b<p.chars.length-1&&row(b+1)&&gap(b,b+1)<c0.h*1.6)b++;
   const r=selRects(p,a,b)[0],text=lineText(p.chars.slice(a,b+1)),an=analyze(p,r);
   let fi=c0.f;
+  if(/[\u0590-\u06FF]/.test(lineText(p.chars.slice(a,b+1)))){toast('جاري تحميل الخطوط العربية…');await Promise.all(['Amiri Quran','Amiri','Noto Naskh Arabic'].map(gfLoad))}
   if(fi&&!fi.exact&&fi.gf&&fi.gf.length){toast('جاري تحميل الخط «'+fi.orig+'» من الإنترنت…');fi=await ensureFont(fi)}
   S.fs=Math.max(8,Math.round(p.ocrDone?c0.h*.85:c0.h/1.1));setColor(toHex(an.ink));
   let fm='عدّل النص';
@@ -877,6 +878,27 @@ mi('bPdf1','PDF — الصفحة الحالية','pdf',()=>exportPdf([P()]));
 mi('bPdf','PDF — كل الصفحات','pdf',()=>exportPdf(pages));
 bExp.onclick=e=>{e.stopPropagation();commitText();const open=menu.style.display==='block';menu.style.display=open?'none':'block';const r=bExp.getBoundingClientRect();menu.style.top=r.bottom+6+'px';menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px'};
 addEventListener('pointerdown',e=>{if(!menu.contains(e.target)&&!bExp.contains(e.target))menu.style.display='none'});
+
+/* ---------- rotate + watermark ---------- */
+function rotObj(o,deg){const a=deg*Math.PI/180,cs=Math.abs(Math.cos(a)),sn=Math.abs(Math.sin(a)),w=o.c.width,h=o.c.height,W=Math.ceil(w*cs+h*sn),H=Math.ceil(w*sn+h*cs),n=mk(W,H),c=n.getContext('2d');
+  c.imageSmoothingQuality='high';c.translate(W/2,H/2);c.rotate(a);c.drawImage(o.c,-w/2,-h/2);const cx=o.x+w/2,cy=o.y+h/2;o.c=n;o.t=null;o.x=Math.round(cx-W/2);o.y=Math.round(cy-H/2)}
+function rotSel(d){const p=P();if(!sel.size)return;const s=snap(p);p.objs.forEach(o=>{if(sel.has(o.id)&&!o.patch)rotObj(o,d)});pushHist(s);render()}
+selbar.insertAdjacentHTML('beforeend','<button class="b" id="sbL">↺ 15°</button><button class="b" id="sbR">↻ 15°</button><button class="b" id="sb9">⟳ 90°</button>');
+$('#sbL').onclick=()=>rotSel(-15);$('#sbR').onclick=()=>rotSel(15);$('#sb9').onclick=()=>rotSel(90);
+const wm=document.createElement('div');wm.style.cssText='position:fixed;z-index:96;display:none;left:50%;top:25%;transform:translateX(-50%);width:290px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 14px 50px rgba(0,0,0,.45)';
+wm.innerHTML='<input id="wmt" dir="auto" placeholder="نص العلامة المائية (اسم المنشئ/المعدّل)" style="width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;user-select:text;-webkit-user-select:text"><label class="chk" style="margin-top:8px"><input type="checkbox" id="wmA"> على كل الصفحات</label><div class="nbr"><button class="b pri" id="wmOk">إضافة</button><button class="b" id="wmX">إلغاء</button></div><div style="font-size:11px;color:var(--mute);margin-top:6px">تؤخذ الشفافية واللون والخط من الشريط. بعد الإضافة: حدّدها لتحريكها أو تدويرها أو تغيير لونها.</div>';
+document.body.appendChild(wm);
+function showWM(){commitText();wm.style.display='block';setTimeout(()=>$('#wmt').focus(),30)}
+$('#wmX').onclick=()=>wm.style.display='none';
+$('#wmt').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')$('#wmOk').click()});
+$('#wmOk').onclick=()=>{const text=$('#wmt').value.trim();if(!text)return;wm.style.display='none';
+  const list=$('#wmA').checked?pages:[P()];
+  list.forEach(p=>{const T={text,fs:Math.round(Math.min(p.w,p.h)/9),font:S.font,bold:true,italic:false,color:S.color,op:S.op===100?.3:S.op/100},c=renderText(T),o={id:oid++,c,x:Math.round((p.w-c.width)/2),y:Math.round((p.h-c.height)/2),t:null};
+    rotObj(o,-30);p.hist.push(snap(p));p.redo=[];p.objs.push(o);if(p===P()){setTool('select');sel.clear();sel.add(o.id)}});
+  render();upd();toast('أُضيفت العلامة المائية')};
+mi('bWm','علامة مائية','text',showWM);
+const ddWm=dd('ddWm','علامة مائية');ddWm.innerHTML=ic('logo')+'<span>WM</span>';ddWm.onclick=showWM;
+['Amiri','Noto Naskh Arabic'].forEach(gfLoad);
 /* ---------- init ---------- */
 addPage(mk(2800,1750,'#fff'),2800,1750,true);
 setColor('#111827');setTool('pen');
