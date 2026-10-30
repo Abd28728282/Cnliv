@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>استوديو الرسم</title>
 <style>
-:root{--bg:#f3f3f9;--panel:#fff;--ink:#17172b;--mute:#6b6b85;--line:#e0e0ec;--acc:#6d4aff;--acc2:#ff4fa3;--stage:#d6d6e4;color-scheme:light;
+:root{--bg:#f3f3f9;--panel:#fff;--ink:#17172b;--mute:#6b6b85;--line:#e0e0ec;--acc:#6d4aff;--acc2:#6d4aff;--stage:#d6d6e4;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0e19;--panel:#1a1a2b;--ink:#f1f1fa;--mute:#9a9ab8;--line:#2d2d45;--stage:#20202e;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0e0e19;--panel:#1a1a2b;--ink:#f1f1fa;--mute:#9a9ab8;--line:#2d2d45;--stage:#20202e;color-scheme:dark}
@@ -40,7 +40,7 @@ main{position:relative;flex:1;min-height:0}
 #tools::-webkit-scrollbar{display:none}
 .tl{flex:none;width:58px;padding:6px 0 5px;border:1px solid var(--line);background:var(--bg);border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mute)}
 .tl i{font-style:normal;font-size:21px;line-height:1}
-.tl.on{border-color:var(--acc);color:var(--ink);background:linear-gradient(180deg,rgba(109,74,255,.18),rgba(255,79,163,.1));box-shadow:0 0 0 1px var(--acc) inset}
+.tl.on{border-color:var(--acc);color:var(--ink);background:linear-gradient(180deg,rgba(109,74,255,.18),rgba(109,74,255,.1));box-shadow:0 0 0 1px var(--acc) inset}
 #props{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 14px;align-items:center}
 #props.hide{display:none}
 .row{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
@@ -79,7 +79,7 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 #tb{display:flex;align-items:center;gap:4px;padding:5px 8px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex:none}
 #tb::-webkit-scrollbar{display:none}#tools{display:contents}
 .tl{flex:none;width:34px;height:34px;padding:0;border-radius:9px;justify-content:center;font-size:0}
-.tl .i{width:20px;height:20px}.tl.on{background:linear-gradient(135deg,rgba(109,74,255,.25),rgba(255,79,163,.15))}
+.tl .i{width:20px;height:20px}.tl.on{background:linear-gradient(135deg,rgba(109,74,255,.25),rgba(109,74,255,.15))}
 .sep{flex:none;width:1px;height:22px;background:var(--line);margin:0 3px}
 #tb #cp{width:34px;height:34px;border-radius:50%}
 .dd{flex:none;display:inline-flex;align-items:center;gap:3px;height:34px;padding:0 8px;border:1px solid var(--line);background:var(--bg);border-radius:9px;font-size:13px;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
@@ -90,6 +90,10 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 #mn button{padding:7px 10px;border:0;background:none;border-radius:8px;color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap;text-align:center}
 #mn button:hover{background:var(--bg)}#mn button.on{background:var(--acc);color:#fff}
 #selbar{background:none;box-shadow:none;border:0;gap:6px}#selbar .b{background:var(--panel);box-shadow:0 6px 22px rgba(0,0,0,.35)}#sbDel{color:#ef4444;border-color:#ef4444}
+#ld{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--stage);padding:24px;text-align:center}#ld.on{display:flex}
+.ldb{width:min(420px,80%);height:12px;border-radius:99px;background:var(--line);overflow:hidden}.ldb i{display:block;height:100%;width:0;background:var(--acc);border-radius:99px;transition:width .2s}
+.ldt{font-size:16px;font-weight:700}.ldp{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
+body.busy header,body.busy #tb{pointer-events:none;opacity:.5}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
@@ -237,7 +241,7 @@ function drawSel(m){
   if(tsel)tsel.forEach(r=>{c.fillStyle='rgba(109,74,255,.3)';c.fillRect(r.x0,r.y,r.x1-r.x0,r.y1-r.y)});
   if(!on)return;c.lineWidth=2*k;c.setLineDash([7*k,5*k]);c.strokeStyle='#6d4aff';
   const L=p.objs.filter(o=>sel.has(o.id));L.forEach(o=>c.strokeRect(o.x,o.y,o.c.width,o.c.height));
-  if(L.length>1){const x0=Math.min(...L.map(o=>o.x)),y0=Math.min(...L.map(o=>o.y)),x1=Math.max(...L.map(o=>o.x+o.c.width)),y1=Math.max(...L.map(o=>o.y+o.c.height));c.strokeStyle='#ff4fa3';c.strokeRect(x0,y0,x1-x0,y1-y0)}
+  if(L.length>1){const x0=Math.min(...L.map(o=>o.x)),y0=Math.min(...L.map(o=>o.y)),x1=Math.max(...L.map(o=>o.x+o.c.width)),y1=Math.max(...L.map(o=>o.y+o.c.height));c.strokeStyle='#4f46e5';c.strokeRect(x0,y0,x1-x0,y1-y0)}
   const B=selBox();if(B){const mx=(B.x0+B.x1)/2,my=(B.y0+B.y1)/2,z=10*k;c.setLineDash([]);c.fillStyle='#fff';c.strokeStyle='#6d4aff';c.lineWidth=2*k;
     for(const x of [B.x0,mx,B.x1])for(const y of [B.y0,my,B.y1]){if(x===mx&&y===my)continue;c.fillRect(x-z/2,y-z/2,z,z);c.strokeRect(x-z/2,y-z/2,z,z)}}
   if(m){c.fillStyle='rgba(109,74,255,.14)';c.strokeStyle='#6d4aff';c.fillRect(m.x,m.y,m.w,m.h);c.strokeRect(m.x,m.y,m.w,m.h)}
@@ -417,33 +421,36 @@ const stg=$('main');
 stg.addEventListener('drop',e=>openFiles([...e.dataTransfer.files]));
 function dropBlank(){if(pages.length===1){const p=pages[0];if(p.blank&&!p.hist.length&&!p.redo.length){pages=[];return true}}return false}
 async function openFiles(files){
-  if(!files.length)return;let first=true,removed=dropBlank(),startIdx=pages.length;
-  for(const f of files){
-    try{
-      if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
-        if(!window.pdfjsLib)throw new Error('pdf');
-        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
-        for(let i=1;i<=doc.numPages;i++){
-          toast(`جاري تحميل الصفحة ${i} من ${doc.numPages}…`);
-          const pg=await doc.getPage(i),v1=pg.getViewport({scale:1}),sc=Math.min(4,2800/v1.width),v=pg.getViewport({scale:sc});
-          const c=mk(Math.round(v.width),Math.round(v.height),'#fff');
-          await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;
-          const pi=addPage(c,c.width,c.height,false);try{pages[pi].chars=buildChars(await pg.getTextContent(),v,pg)}catch(_){}
-          if(first){show(startIdx);fit();first=false}else upd();
+  if(!files.length)return;let ok=false;dropBlank();const startIdx=pages.length;
+  try{
+    for(let fi=0;fi<files.length;fi++){
+      const f=files[fi],base=fi/files.length,span=1/files.length;
+      try{
+        if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){
+          if(!window.pdfjsLib)throw new Error('pdf');
+          pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          ld('جاري فتح الملف…',base,f.name);await new Promise(r=>setTimeout(r,30));
+          const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+          for(let i=1;i<=doc.numPages;i++){
+            ld('جاري تحميل الملف…',base+span*(i-1)/doc.numPages,'صفحة '+i+' من '+doc.numPages);await new Promise(r=>setTimeout(r,0));
+            const pg=await doc.getPage(i),v1=pg.getViewport({scale:1}),sc=Math.min(4,2800/v1.width),v=pg.getViewport({scale:sc});
+            const c=mk(Math.round(v.width),Math.round(v.height),'#fff');
+            await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;
+            const pi=addPage(c,c.width,c.height,false);try{pages[pi].chars=buildChars(await pg.getTextContent(),v,pg)}catch(_){}
+            ok=true;
+          }
+        }else{
+          ld('جاري تحميل الصورة…',base,f.name);await new Promise(r=>setTimeout(r,30));
+          let bmp;try{bmp=await createImageBitmap(f)}catch(_){throw new Error('img')}
+          const k=Math.min(1,4800/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*k),h=Math.round(bmp.height*k);
+          const c=mk(w,h,'#fff');c.getContext('2d').drawImage(bmp,0,0,w,h);addPage(c,w,h,false);ok=true;
         }
-      }else{
-        let bmp;try{bmp=await createImageBitmap(f)}catch(_){throw new Error('img')}
-        const k=Math.min(1,4800/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*k),h=Math.round(bmp.height*k);
-        const c=mk(w,h,'#fff');c.getContext('2d').drawImage(bmp,0,0,w,h);addPage(c,w,h,false);
-        if(first){show(startIdx);fit();first=false}else upd();
-      }
-    }catch(err){toast('تعذّر فتح الملف: '+f.name)}
-  }
+      }catch(err){toast('تعذّر فتح الملف: '+f.name)}
+    }
+  }finally{ldHide()}
   if(!pages.length){addPage(mk(2800,1750,'#fff'),2800,1750,true);show(0);fit()}
-  else if(!first)toast('تم الفتح ✓ — ارسم مباشرة فوق الصفحة');
+  else if(ok){show(startIdx);fit();toast('تم الفتح — ارسم مباشرة فوق الصفحة')}
 }
-
 /* ---------- export ---------- */
 function comp(p){commitText();const c=document.createElement('canvas');c.width=p.w;c.height=p.h;const x=c.getContext('2d');x.drawImage(p.bg,0,0);x.drawImage(p.draw,0,0);return c}
 async function save(name,data){
@@ -467,7 +474,7 @@ function renderText(t){
   const F=`${t.italic?'italic ':''}${t.bold?'bold ':''}${t.fs}px ${t.font}`,L=t.text.split('\n'),lh=t.fs*1.25,m=mk(1,1).getContext('2d');m.font=F;
   const w=Math.ceil(Math.max(20,...L.map(l=>m.measureText(l).width)))+2,c=mk(w+8,Math.ceil(L.length*lh)+8),x=c.getContext('2d');
   x.globalAlpha=t.op;x.fillStyle=t.color;x.font=F;x.textBaseline='middle';
-  L.forEach((l,i)=>{const r=/[\u0590-\u06FF]/.test(l);x.direction=r?'rtl':'ltr';x.textAlign=r?'right':'left';x.fillText(l,r?4+w:4,4+i*lh+lh/2)});
+  L.forEach((l,i)=>{const m1=l.match(/[A-Za-z\u0590-\u06FF]/),r=!!m1&&/[\u0590-\u06FF]/.test(m1[0]);x.direction=r?'rtl':'ltr';x.textAlign=r?'right':'left';x.fillText(l,r?4+w:4,4+i*lh+lh/2)});
   return c;
 }
 function applyTaStyle(){if(!ta)return;tx.fs=S.fs;Object.assign(ta.style,{fontSize:tx.fs*S.z+'px',color:S.color,fontFamily:S.font,fontWeight:S.bold?700:400,fontStyle:S.italic?'italic':'normal',left:tx.x*S.z+'px',top:tx.y*S.z+'px'});ta.oninput&&ta.oninput()}
@@ -603,6 +610,7 @@ function hasFont(name){
   const r=['monospace','sans-serif','serif'].some(g=>{_fc.font=`72px "${name}",${g}`;return _fc.measureText(t).width!==w(g)});
   _fcache.set(name,r);return r;
 }
+const FGF={arial:'Arimo',helvetica:'Arimo',timesnewroman:'Tinos',times:'Tinos',couriernew:'Cousine',courier:'Cousine',calibri:'Carlito',cambria:'Caladea',traditionalarabic:'Amiri',simplifiedarabic:'Noto Naskh Arabic',arabictypesetting:'Amiri'};
 const FALIAS={arial:'Arial',timesnewroman:'Times New Roman',couriernew:'Courier New',courier:'Courier New',times:'Times New Roman',segoeui:'Segoe UI',trebuchetms:'Trebuchet MS',comicsansms:'Comic Sans MS',lucidasans:'Lucida Sans',calibri:'Calibri',cambria:'Cambria',tahoma:'Tahoma',verdana:'Verdana',georgia:'Georgia'};
 function fontInfo(pg,name,cache){
   if(cache.has(name))return cache.get(name);let r=null;
@@ -610,13 +618,30 @@ function fontInfo(pg,name,cache){
     const f=pg.commonObjs.get(name),orig=(f.name||'').replace(/^[A-Z]{6}\+/,''),l=orig.toLowerCase(),base=orig.split(/[-,]/)[0].replace(/_/g,' ').trim();
     const key=base.toLowerCase().replace(/\s/g,'').replace(/(psmt|mt|ps)$/,''),spaced=base.replace(/(MT|PSMT|PS)$/,'').replace(/([a-z])([A-Z])/g,'$1 $2').trim();
     const merged=spaced.split(' ').reduce((a,t)=>{if(t.length<=2&&a.length)a[a.length-1]+=t;else a.push(t);return a},[]).join(' '),found=[FALIAS[key],spaced,merged,base].filter(Boolean).find(hasFont);
-    r={font:found?`"${found}",system-ui,sans-serif`:DEFAULT_FONT,exact:!!found,label:found||'خط النظام',orig:orig||'؟',bold:!!f.bold||/bold|black|heavy/.test(l),italic:!!f.italic||/italic|oblique/.test(l)};
+    r={font:found?`"${found}",system-ui,sans-serif`:DEFAULT_FONT,exact:!!found,label:found||'خط النظام',orig:orig||'؟',gf:[...new Set([spaced,merged,base,FGF[key]].filter(Boolean))],bold:!!f.bold||/bold|black|heavy/.test(l),italic:!!f.italic||/italic|oblique/.test(l)};
   }}catch(_){}
   cache.set(name,r);return r;
 }
 function setFont(stack,label){
   S.font=stack;const sl=$('#sFont');[...sl.options].filter(o=>o.dataset.c&&o.value!==stack).forEach(o=>o.remove());
   if(![...sl.options].some(o=>o.value===stack)){const o=new Option(label||'الخط الأصلي',stack);o.dataset.c=1;sl.add(o,0)}sl.value=stack;
+}
+const _gf=new Map();
+function gfLoad(name){
+  if(_gf.has(name))return _gf.get(name);
+  const q='https://fonts.googleapis.com/css2?family='+encodeURIComponent(name).replace(/%20/g,'+');
+  const pr=(async()=>{
+    for(const ax of [':ital,wght@0,400;0,700;1,400;1,700',':wght@400;700','']){
+      const l=await new Promise(res=>{const k=document.createElement('link');k.rel='stylesheet';k.href=q+ax+'&display=swap';k.onload=()=>res(k);k.onerror=()=>{k.remove();res(null)};document.head.appendChild(k);setTimeout(()=>res(null),9000)});
+      if(l){try{const r=await document.fonts.load('400 24px "'+name+'"','Aa ابت');if(r.length)return true}catch(_){}}
+    }return false;
+  })();
+  _gf.set(name,pr);return pr;
+}
+async function ensureFont(f){
+  if(!f||f.exact)return f;
+  for(const n of f.gf||[]){if(await gfLoad(n))return{...f,font:'"'+n+'",system-ui,sans-serif',exact:true,loaded:true,label:n}}
+  return f;
 }
 function lineText(L){
   const items=[];L.forEach(c=>{const last=items[items.length-1];if(last&&last.id===c.it)last.ch.push(c);else items.push({id:c.it,ch:[c]})});
@@ -687,17 +712,23 @@ function analyze(p,r){
   for(let i=0;i<d.length;i+=4){if(Math.abs(d[i]-bg[0])+Math.abs(d[i+1]-bg[1])+Math.abs(d[i+2]-bg[2])>250){sr+=d[i];sg+=d[i+1];sb+=d[i+2];n++}}
   return{bg,ink:n?[sr/n,sg/n,sb/n].map(Math.round):[17,24,39]};
 }
-function retextAt(e){
+async function retextAt(e){
   e.preventDefault();commitText();const p=P(),q=pos(e);
+  const hO=hit(q);if(hO&&hO.t){editText(hO);return}
+  if(p.objs.some(o=>o.patch&&q.x>=o.x&&q.x<=o.x+o.c.width&&q.y>=o.y&&q.y<=o.y+o.c.height)){toast('هذا السطر معدَّل أو محذوف — انقر مرتين على النص الجديد لتعديله، أو تراجع Ctrl+Z لاسترجاع الأصل');return}
   if(!p.chars||p.chars.length<8){if(!p.ocrDone&&!p.ocrTried){ocrPage(p);return}toast('لا يوجد نص قابل للتعديل في هذه الصفحة');return}
   let a=nearChar(p,q),b=a;const c0=p.chars[a];
   if(q.x<c0.x-c0.h||q.x>c0.x+c0.w+c0.h||q.y<c0.y-c0.h*.6||q.y>c0.y+c0.h*1.6){toast('انقر على سطر نص لتعديله');return}
   const row=i=>Math.abs(p.chars[i].y-c0.y)<c0.h*.5,gap=(i,j)=>{const A=p.chars[i],B=p.chars[j];return Math.max(0,Math.max(A.x,B.x)-Math.min(A.x+A.w,B.x+B.w))};
   while(a>0&&row(a-1)&&gap(a-1,a)<c0.h*1.6)a--;while(b<p.chars.length-1&&row(b+1)&&gap(b,b+1)<c0.h*1.6)b++;
   const r=selRects(p,a,b)[0],text=lineText(p.chars.slice(a,b+1)),an=analyze(p,r);
+  let fi=c0.f;
+  if(fi&&!fi.exact&&fi.gf&&fi.gf.length){toast('جاري تحميل الخط «'+fi.orig+'» من الإنترنت…');fi=await ensureFont(fi)}
   S.fs=Math.max(8,Math.round(p.ocrDone?c0.h*.85:c0.h/1.1));setColor(toHex(an.ink));
   let fm='عدّل النص';
-  if(c0.f){setFont(c0.f.font,c0.f.label);S.bold=c0.f.bold;S.italic=c0.f.italic;$('#cB').checked=S.bold;$('#cI').checked=S.italic;fm=c0.f.exact?'نفس خط الملف: '+c0.f.label:'خط الملف «'+c0.f.orig+'» غير مثبّت عندك — استُخدم خط النظام، يمكنك تغييره'}updTb();
+  if(fi){setFont(fi.font,fi.label);S.bold=fi.bold;S.italic=fi.italic;$('#cB').checked=S.bold;$('#cI').checked=S.italic;
+    fm=fi.loaded?'تم تحميل الخط «'+fi.label+'» من الإنترنت':fi.exact?'نفس خط الملف: '+fi.label:'لم أجد الخط «'+fi.orig+'» حتى على الإنترنت — استُخدم خط النظام، يمكنك تغييره'}
+  updTb();
   const rtl=/[\u0590-\u06FF]/.test(text),cy=(r.y+r.y1)/2;
   openTa(r.x0,cy-S.fs*.625,text);rtx={r,bg:an.bg};updTb();ta.style.background=`rgb(${an.bg})`;
   if(rtl){tx.x=r.x1-ta.offsetWidth/S.z;applyTaStyle()}
@@ -747,7 +778,7 @@ async function ocrPage(p){
   p.ocrBusy=true;toast('جاري التعرف على النص… قد يستغرق دقيقة');let got=false;
   try{
     const r=await Promise.race([
-      Tesseract.recognize(p.bg,'ara+eng',{workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',logger:m=>{got=true;if(m.status==='recognizing text')toast('التعرف على النص '+Math.round(m.progress*100)+'%')}}),
+      Tesseract.recognize(p.bg,S.ocrLang||'ara+eng',{workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',logger:m=>{got=true;if(m.status==='recognizing text')toast('التعرف على النص '+Math.round(m.progress*100)+'%')}}),
       new Promise((_,j)=>setTimeout(()=>{if(!got)j(new Error('blocked'))},15000))]);
     p.chars=ocrChars(r.data);p.ocrDone=true;
     toast(p.chars.length?'اكتمل التعرف — حدّد النص الآن':'لم يُعثر على نص في هذه الصفحة');
@@ -785,9 +816,12 @@ ddHd.onclick=()=>pop(ddHd,[100,85,65,45,25].map(v=>[v,v+'%']),S.hard,v=>{S.hard=
 ddOcr.onclick=()=>{const p=P();p.ocrTried=false;ocrPage(p)};
 tbB.onclick=()=>{S.bold=!S.bold;$('#cB').checked=S.bold;updCur();restyle('font')};
 tbI.onclick=()=>{S.italic=!S.italic;$('#cI').checked=S.italic;updCur();restyle('font')};
-ddMore.onclick=()=>pop(ddMore,[['fill','تعبئة الأشكال: '+(S.fill?'مفعّلة':'متوقفة')],['press','حساسية قلم الشاشة: '+(S.press?'مفعّلة':'متوقفة')],['ocr','التعرف على النص (OCR) في هذه الصفحة'],['rev','عكس ترتيب حروف النص المفتوح'],['help','اختصارات لوحة المفاتيح']],null,v=>{
-  if(v==='fill')S.fill=!S.fill;else if(v==='press')S.press=!S.press;else if(v==='ocr')ocrPage(P());else if(v==='rev'){if(ta){ta.value=[...ta.value].reverse().join('');ta.oninput()}else toast('افتح سطرًا بأداة تعديل النص أولًا')}else toast('Ctrl+Z تراجع · Ctrl+A تحديد الكل · Delete حذف · Space تحريك الصفحة · [ ] حجم الفرشاة')},1);
+ddMore.onclick=()=>pop(ddMore,[['fill','تعبئة الأشكال: '+(S.fill?'مفعّلة':'متوقفة')],['press','حساسية قلم الشاشة: '+(S.press?'مفعّلة':'متوقفة')],['ocr','التعرف على النص (OCR) في هذه الصفحة'],['rev','عكس ترتيب حروف النص المفتوح'],['olang','لغة OCR: '+({'ara+eng':'عربي + إنجليزي',ara:'عربي فقط',eng:'إنجليزي فقط'}[S.ocrLang||'ara+eng'])],['help','اختصارات لوحة المفاتيح']],null,v=>{
+  if(v==='fill')S.fill=!S.fill;else if(v==='press')S.press=!S.press;else if(v==='ocr')ocrPage(P());else if(v==='olang'){S.ocrLang={'ara+eng':'ara',ara:'eng',eng:'ara+eng'}[S.ocrLang||'ara+eng'];toast('لغة OCR: '+({'ara+eng':'عربي + إنجليزي',ara:'عربي فقط',eng:'إنجليزي فقط'}[S.ocrLang]))}else if(v==='rev'){if(ta){ta.value=[...ta.value].reverse().join('');ta.oninput()}else toast('افتح سطرًا بأداة تعديل النص أولًا')}else toast('Ctrl+Z تراجع · Ctrl+A تحديد الكل · Delete حذف · Space تحريك الصفحة · [ ] حجم الفرشاة')},1);
 $('#bProps').style.display='none';
+const ldEl=document.createElement('div');ldEl.id='ld';ldEl.innerHTML='<div class="ldt"></div><div class="ldb"><i></i></div><div class="ldp"></div>';$('main').appendChild(ldEl);
+function ld(title,frac,sub){frac=Math.max(0,Math.min(1,frac));ldEl.classList.add('on');document.body.classList.add('busy');ldEl.querySelector('.ldt').textContent=title;ldEl.querySelector('i').style.width=Math.round(frac*100)+'%';ldEl.querySelector('.ldp').textContent=Math.round(frac*100)+'٪ · '+sub}
+function ldHide(){ldEl.classList.remove('on');document.body.classList.remove('busy')}
 /* ---------- icons init ---------- */
 const MAP={bOpen:'open',bNew:'page',bUndo:'undo',bRedo:'redo',bZo:'minus',bZi:'plus',bFit:'fit',bProps:'sliders',bClr:'trash',bPng:'image',bPdf:'pdf',pPrev:'prev',pNext:'next',pDel:'trash'};
 for(const k in MAP){const b=$('#'+k),t=b.querySelector('.t');b.innerHTML=ic(MAP[k])+(t?t.outerHTML:'')}
