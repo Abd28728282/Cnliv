@@ -898,13 +898,17 @@ $('#wmOk').onclick=()=>{const text=$('#wmt').value.trim();if(!text)return;wm.sty
   render();upd();toast('أُضيفت العلامة المائية')};
 mi('bWm','علامة مائية','text',showWM);
 const imgIn=document.createElement('input');imgIn.type='file';imgIn.accept='image/*';imgIn.multiple=true;imgIn.hidden=true;document.body.appendChild(imgIn);
+async function loadImg(f){
+  try{return await createImageBitmap(f)}catch(_){}
+  return await new Promise((res,rej)=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{res(i);setTimeout(()=>URL.revokeObjectURL(u),4000)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'))};i.src=u});
+}
 async function addImgs(files){
   commitText();const p=P();let last=null;
-  for(const f of files){let bmp;try{bmp=await createImageBitmap(f)}catch(_){toast('تعذّر قراءة الصورة: '+f.name);continue}
+  for(const f of files){let bmp;try{bmp=await loadImg(f)}catch(_){toast('تعذّر قراءة الصورة: '+f.name);continue}
     const k=Math.min(1,p.w*.5/bmp.width,p.h*.5/bmp.height),w=Math.max(1,Math.round(bmp.width*k)),h=Math.max(1,Math.round(bmp.height*k)),c=mk(w,h),x=c.getContext('2d');
     x.imageSmoothingQuality='high';x.drawImage(bmp,0,0,w,h);
     const s=snap(p),o={id:oid++,c,x:Math.round((p.w-w)/2),y:Math.round((p.h-h)/2),t:null};p.objs.push(o);pushHist(s);last=o}
-  if(last){setTool('select');sel.clear();sel.add(last.id);render();toast('أُضيفت الصورة — اسحبها، غيّر حجمها من المقابض، أو دوّرها')}
+  if(last){setTool('select');sel.clear();sel.add(last.id);render();(()=>{const r=wrap.getBoundingClientRect();stage.scrollLeft+=r.left+(last.x+last.c.width/2)*S.z-innerWidth/2;stage.scrollTop+=r.top+(last.y+last.c.height/2)*S.z-innerHeight/2})();toast('أُضيفت الصورة — اسحبها، غيّر حجمها من المقابض، أو دوّرها')}
 }
 imgIn.onchange=e=>{addImgs([...e.target.files]);e.target.value=''};
 mi('bImg','إضافة صورة من الجهاز','image',()=>imgIn.click());
