@@ -142,7 +142,7 @@ body.busy header,body.busy #tb{pointer-events:none;opacity:.5}
 <div id="toast"></div>
 <script>
 (()=>{
-const $=s=>document.querySelector(s);
+const $=s=>document.querySelector(s);const WV=/; wv\)|Version\/[\d.]+.*Chrome/.test(navigator.userAgent);
 const stage=$('#stage'),wrap=$('#wrap'),cur=$('#cur'),ring=cur.querySelector('.ring'),ico=cur.querySelector('.ico');
 const S={tool:'pen',prev:'pen',color:'#111827',size:14,op:100,sm:40,press:true,fill:false,z:1,font:'Tahoma,sans-serif',bold:false,italic:false,fs:36,hard:85};
 const PATH={retext:'M4 6V4h13v2M10.500 4v11M8 15h5M14 20l6-6 2 2-6 6h-2z',lift:'M6 2v14a2 2 0 002 2h14M2 6h14a2 2 0 012 2v14',hl:'M4 21h6M8 17l9-9 3 3-9 9H8zM17 8l-2-2 2-2 3 3z',ul:'M7 4v7a5 5 0 0010 0V4M5 21h14',st:'M4 12h16M16 7a4 4 0 00-4-2c-3 0-4 2-4 3.500M8 17a4 4 0 004 2c3 0 4-2 4-3.500',cm:'M4 5h16v11H10l-6 4zM8 9h8M8 12h5',select:'M5 3l13 8-6 2 3 6-2.5 1-3-6-4.5 4z',objdel:'M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M8 8l8 8M16 8l-8 8',logo:'M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z',open:'M3 6h6l2 2h10v11H3z',page:'M6 3h8l4 4v14H6zM14 3v4h4',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',minus:'M5 12h14',plus:'M12 5v14M5 12h14',fit:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',trash:'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14',image:'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6M8 9h.01',pdf:'M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h6',prev:'M15 5l-7 7 7 7',next:'M9 5l7 7-7 7',sliders:'M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6',pen:'M14 3l6 6-3 6-6 2-4-4 2-6zM3 21l8-8',pencil:'M3 21l1.5-5.5L16 4a2 2 0 013 0l1 1a2 2 0 010 3L8.5 19.5zM13.5 6.5l4 4',brush:'M3 21c2.500 0 4.500-.5 4.500-3a3 3 0 013-3l1 1a3 3 0 01-3 3c0 2-2 3-5.500 2zM11 14L20 4a1.500 1.500 0 012 2l-9 9',marker:'M4 21h6M7 17l-1 4M7 17l9-9 3 3-9 9zM16 8l2-2 3 3-2 2',callig:'M3 21l2-6 8-10 6 6-10 8zM5 15l4 4M14 5l5 5',spray:'M7 10h7v11H7zM9 10V7h3v3M16 5h.01M19 4h.01M19 8h.01M16 8h.01M21 6h.01',text:'M5 6V4h14v2M12 4v16M9 20h6',bucket:'M4 11l7-7 8 8-7 7zM4 11h15M20 16s2.500 2.500 0 4-2-1.500 0-4',eraser:'M20 20H9L4 15a2 2 0 010-3L13 3a2 2 0 013 0l5 5a2 2 0 010 3L12 20M7 12l6 6',seraser:'M20 20H9L4 15a2 2 0 010-3L13 3a2 2 0 013 0l5 5a2 2 0 010 3L12 20M7 12l6 6M3 20h.01M6 21h.01',line:'M4 20L20 4',rect:'M4 6h16v12H4z',ellipse:'M12 5c5 0 9 3 9 7s-4 7-9 7-9-3-9-7 4-7 9-7z',arrow:'M4 20L19 5M10 5h9v9',pick:'M20 4l-3-1-4 4-1-1-2 2 6 6 2-2-1-1 4-4zM11 11l-7 7v2h2l7-7',hand:'M8 12V5a1.500 1.500 0 013 0v6V4a1.500 1.500 0 013 0v7V6a1.500 1.500 0 013 0v8c0 5-3 7-6 7s-5-2-7-6l-1-2a1.500 1.500 0 012-1.500z'};
@@ -444,18 +444,19 @@ async function openFiles(files){
           pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
           ld('جاري فتح الملف…',base,f.name);await new Promise(r=>setTimeout(r,30));
           const buf=await f.arrayBuffer(),srcRec={bytes:buf.slice(0)};const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
-          for(let i=1;i<=doc.numPages;i++){
-            ld('جاري تحميل الملف…',base+span*(i-1)/doc.numPages,'صفحة '+i+' من '+doc.numPages);await new Promise(r=>setTimeout(r,0));
-            const pg=await doc.getPage(i),v1=pg.getViewport({scale:1}),sc=Math.min(3,(doc.numPages>40?1500:doc.numPages>15?1900:2400)/v1.width),v=pg.getViewport({scale:sc});
-            const cw=Math.round(v.width),chh=Math.round(v.height);
-            const rn=async()=>{await pg.render({canvasContext:pp.bg.getContext('2d'),viewport:v}).promise;try{if(!pp.ocrDone)pp.chars=buildChars(await pg.getTextContent(),v,pg)}catch(_){}try{pg.cleanup()}catch(_){}};let pp=null;
-            const pi=addPage(null,cw,chh,false);pp=pages[pi];pp.rn=rn;pp.src=srcRec;pp.sn=i;pp.pt=[v1.width,v1.height];if(i===1)await ensure(pp);
-            ok=true;
-          }
+          const TW=(doc.numPages>40?1500:doc.numPages>15?1900:2400)*(WV?.62:1);
+          const mkRn=(i,pp)=>async()=>{
+            const pg=await doc.getPage(i),v1=pg.getViewport({scale:1}),v=pg.getViewport({scale:Math.min(3,TW/v1.width)}),w=Math.round(v.width),h=Math.round(v.height);
+            if(w!==pp.w||h!==pp.h){pp.w=w;pp.h=h;pp.pt=[v1.width,v1.height];pp.bg.width=w;pp.bg.height=h;pp.draw.width=w;pp.draw.height=h;const x=pp.bg.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);pp.dc=pp.draw.getContext('2d')}
+            await pg.render({canvasContext:pp.bg.getContext('2d'),viewport:v}).promise;
+            try{if(!pp.ocrDone)pp.chars=buildChars(await pg.getTextContent(),v,pg)}catch(_){}try{pg.cleanup()}catch(_){}};
+          ld('جاري فتح الملف…',base+span*.5,f.name);await new Promise(r=>setTimeout(r,0));
+          const pg1=await doc.getPage(1),u1=pg1.getViewport({scale:1}),u=pg1.getViewport({scale:Math.min(3,TW/u1.width)}),cw=Math.round(u.width),chh=Math.round(u.height);
+          for(let i=1;i<=doc.numPages;i++){const pp=pages[addPage(null,cw,chh,false)];pp.rn=mkRn(i,pp);pp.src=srcRec;pp.sn=i;pp.pt=[u1.width,u1.height];if(i===1)await ensure(pp);ok=true}
         }else{
           ld('جاري تحميل الصورة…',base,f.name);await new Promise(r=>setTimeout(r,30));
           let bmp;try{bmp=await createImageBitmap(f)}catch(_){throw new Error('img')}
-          const k=Math.min(1,4800/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*k),h=Math.round(bmp.height*k);
+          const k=Math.min(1,(WV?3000:4800)/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*k),h=Math.round(bmp.height*k);
           const c=mk(w,h,'#fff');c.getContext('2d').drawImage(bmp,0,0,w,h);addPage(c,w,h,false);ok=true;
         }
       }catch(err){toast('تعذّر فتح الملف: '+f.name)}
@@ -924,7 +925,7 @@ imgIn.onchange=e=>{addImgs([...e.target.files]);e.target.value=''};
 mi('bImg','إضافة صورة من الجهاز','image',()=>imgIn.click());
 const ddImg=dd('ddImg','إضافة صورة من الجهاز');ddImg.innerHTML=ic('image')+'<span>+</span>';ddImg.onclick=()=>imgIn.click();
 /* ---------- export with progress + ZIP ---------- */
-const tick=()=>new Promise(r=>setTimeout(r,20)),blobOf=(c,t,q)=>new Promise(r=>c.toBlob(r,t,q)),EXT={'image/png':'png','image/jpeg':'jpg'};
+const tick=()=>new Promise(r=>setTimeout(r,20)),blobOf=(c,t,q)=>{if(window.OffscreenCanvas){try{const o=new OffscreenCanvas(c.width,c.height);o.getContext('2d').drawImage(c,0,0);return o.convertToBlob({type:t,quality:q}).catch(()=>new Promise(r=>c.toBlob(r,t,q)))}catch(e){}}return new Promise(r=>c.toBlob(r,t,q))},EXT={'image/png':'png','image/jpeg':'jpg'};
 async function buildPdf(list,f0,f1,label){
   const {jsPDF}=window.jspdf;let doc;
   for(let i=0;i<list.length;i++){const p=list[i],o=p.w>p.h?'l':'p',f=[p.w,p.h];
@@ -938,9 +939,9 @@ async function buildPdfLib(list,f0,f1,label){
   const {PDFDocument}=PDFLib,out=await PDFDocument.create(),srcs=new Map();let i=0;
   while(i<list.length){
     const p=list[i];ld(label,f0+(f1-f0)*i/list.length,'صفحة '+(i+1)+' من '+list.length);await tick();
-    if(p.src&&!p.src.bad&&!p.objs.length){
+    if(p.src&&!p.src.bad&&!p.objs.length&&(list.length>2||p.src.sd)){
       let j=i;const idx=[];while(j<list.length&&list[j].src===p.src&&!list[j].objs.length){idx.push(list[j].sn-1);j++}
-      try{let sd=srcs.get(p.src);if(!sd){sd=await PDFDocument.load(p.src.bytes,{ignoreEncryption:true,updateMetadata:false});srcs.set(p.src,sd)}
+      try{let sd=srcs.get(p.src)||p.src.sd;if(!sd){sd=await PDFDocument.load(p.src.bytes,{ignoreEncryption:true,updateMetadata:false});srcs.set(p.src,sd)}p.src.sd=sd;
         (await out.copyPages(sd,idx)).forEach(c=>out.addPage(c));i=j;continue}catch(e){p.src.bad=true}
     }
     await ensure(p);const jb=await blobOf(comp(p),'image/jpeg',.9),img=await out.embedJpg(new Uint8Array(await jb.arrayBuffer())),W=p.pt?p.pt[0]:p.w*.75,H=p.pt?p.pt[1]:p.h*.75,pg=out.addPage([W,H]);
