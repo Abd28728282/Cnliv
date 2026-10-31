@@ -97,10 +97,11 @@ input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0}
 .ldb{width:min(420px,80%);height:12px;border-radius:99px;background:var(--line);overflow:hidden}.ldb i{display:block;height:100%;width:0;background:var(--acc);border-radius:99px;transition:width .2s}
 .ldt{font-size:16px;font-weight:700}.ldp{font-size:13px;color:var(--mute);font-variant-numeric:tabular-nums}
 body.busy header,body.busy #tb{pointer-events:none;opacity:.5}
-#selbar{flex-wrap:wrap;justify-content:center;max-width:96%}</style>
+#selbar{flex-wrap:wrap;justify-content:center;max-width:96%}#menu{max-height:70vh;overflow:auto}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -424,7 +425,7 @@ const stg=$('main');
 stg.addEventListener('drop',e=>openFiles([...e.dataTransfer.files]));
 function dropBlank(){if(pages.length===1){const p=pages[0];if(p.blank&&!p.hist.length&&!p.redo.length){pages=[];return true}}return false}
 async function openFiles(files){
-  if(!files.length)return;let ok=false;dropBlank();const startIdx=pages.length;
+  if(!files.length)return;let ok=false;commitText();const oldPages=pages,oldCi=ci;pages=[];sel.clear();const startIdx=0;
   try{
     for(let fi=0;fi<files.length;fi++){
       const f=files[fi],base=fi/files.length,span=1/files.length;
@@ -451,7 +452,7 @@ async function openFiles(files){
       }catch(err){toast('تعذّر فتح الملف: '+f.name)}
     }
   }finally{ldHide()}
-  if(!pages.length){addPage(mk(2800,1750,'#fff'),2800,1750,true);show(0);fit()}
+  if(!pages.length){if(oldPages.length){pages=oldPages;show(oldCi)}else{addPage(mk(2800,1750,'#fff'),2800,1750,true);show(0);fit()}}
   else if(ok){show(startIdx);fit();toast('تم الفتح — ارسم مباشرة فوق الصفحة')}
 }
 /* ---------- export ---------- */
@@ -913,6 +914,30 @@ async function addImgs(files){
 imgIn.onchange=e=>{addImgs([...e.target.files]);e.target.value=''};
 mi('bImg','إضافة صورة من الجهاز','image',()=>imgIn.click());
 const ddImg=dd('ddImg','إضافة صورة من الجهاز');ddImg.innerHTML=ic('image')+'<span>+</span>';ddImg.onclick=()=>imgIn.click();
+/* ---------- export with progress + ZIP ---------- */
+const tick=()=>new Promise(r=>setTimeout(r,20)),blobOf=(c,t,q)=>new Promise(r=>c.toBlob(r,t,q)),EXT={'image/png':'png','image/jpeg':'jpg'};
+async function buildPdf(list,f0,f1,label){
+  const {jsPDF}=window.jspdf;let doc;
+  for(let i=0;i<list.length;i++){const p=list[i],o=p.w>p.h?'l':'p',f=[p.w,p.h];
+    ld(label,f0+(f1-f0)*i/list.length,'صفحة '+(i+1)+' من '+list.length);await tick();
+    if(i===0)doc=new jsPDF({unit:'px',format:f,orientation:o,hotfixes:['px_scaling']});else doc.addPage(f,o);
+    doc.addImage(comp(p).toDataURL('image/jpeg',.92),'JPEG',0,0,p.w,p.h)}
+  ld(label,f1,'إنهاء الملف');await tick();return doc.output('blob');
+}
+async function runExport(name,fn){commitText();try{const b=await fn();ld('اكتمل التجهيز',1,'جاهز للحفظ');await tick();ldHide();await save(name,b)}catch(e){ldHide();toast('تعذّر التصدير')}}
+const exImg=type=>runExport('رسمي.'+EXT[type],async()=>{ld('جاري تجهيز الصورة…',.2,'');await tick();const b=await blobOf(comp(P()),type,.95);ld('جاري تجهيز الصورة…',.9,'');return b});
+const exPdf=list=>{if(!window.jspdf){toast('مكتبة PDF غير محمّلة');return}runExport('رسمي.pdf',()=>buildPdf(list,0,.97,'جاري تجهيز PDF…'))};
+const exZip=(type,withPdf)=>{
+  if(!window.JSZip||(withPdf&&!window.jspdf)){toast('مكتبة ZIP غير محمّلة — أعد تحميل الصفحة');return}
+  runExport(withPdf?'رسمي-كل-شيء.zip':'رسمي-صور.zip',async()=>{const z=new JSZip(),n=pages.length,span=withPdf?.55:.9;
+    for(let i=0;i<n;i++){ld('جاري تجهيز الصور…',span*i/n,'صفحة '+(i+1)+' من '+n);await tick();z.file((withPdf?'الصور/':'')+'صفحة-'+String(i+1).padStart(3,'0')+'.'+EXT[type],await blobOf(comp(pages[i]),type,.95))}
+    if(withPdf)z.file('المستند.pdf',await buildPdf(pages,span,.9,'جاري تجهيز PDF…'));
+    return z.generateAsync({type:'blob',compression:'STORE'},m=>ld('جاري إنشاء ZIP…',.9+m.percent/1000,Math.round(m.percent)+'%'))})};
+const bind=(id,fn)=>{const b=$('#'+id);if(b)b.onclick=()=>{menu.style.display='none';fn()}};
+bind('bPng',()=>exImg('image/png'));bind('bJpg',()=>exImg('image/jpeg'));bind('bPdf1',()=>exPdf([P()]));bind('bPdf',()=>exPdf(pages));
+mi('bZip','ZIP — كل الصفحات كصور PNG','image',()=>exZip('image/png'));
+mi('bZipJ','ZIP — كل الصفحات كصور JPG (أصغر حجماً)','image',()=>exZip('image/jpeg'));
+mi('bAll','كل شيء — ZIP فيه PDF وصور الصفحات','pdf',()=>exZip('image/png',true));
 const ddWm=dd('ddWm','علامة مائية');ddWm.innerHTML=ic('logo')+'<span>WM</span>';ddWm.onclick=showWM;
 ['Amiri','Noto Naskh Arabic'].forEach(gfLoad);
 /* ---------- init ---------- */
