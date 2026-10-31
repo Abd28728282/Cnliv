@@ -102,6 +102,7 @@ body.busy header,body.busy #tb{pointer-events:none;opacity:.5}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -442,13 +443,13 @@ async function openFiles(files){
           if(!window.pdfjsLib)throw new Error('pdf');
           pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
           ld('جاري فتح الملف…',base,f.name);await new Promise(r=>setTimeout(r,30));
-          const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+          const buf=await f.arrayBuffer(),srcRec={bytes:buf.slice(0)};const doc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
           for(let i=1;i<=doc.numPages;i++){
             ld('جاري تحميل الملف…',base+span*(i-1)/doc.numPages,'صفحة '+i+' من '+doc.numPages);await new Promise(r=>setTimeout(r,0));
             const pg=await doc.getPage(i),v1=pg.getViewport({scale:1}),sc=Math.min(3,(doc.numPages>40?1500:doc.numPages>15?1900:2400)/v1.width),v=pg.getViewport({scale:sc});
             const cw=Math.round(v.width),chh=Math.round(v.height);
             const rn=async()=>{await pg.render({canvasContext:pp.bg.getContext('2d'),viewport:v}).promise;try{if(!pp.ocrDone)pp.chars=buildChars(await pg.getTextContent(),v,pg)}catch(_){}try{pg.cleanup()}catch(_){}};let pp=null;
-            const pi=addPage(null,cw,chh,false);pp=pages[pi];pp.rn=rn;if(i===1)await ensure(pp);
+            const pi=addPage(null,cw,chh,false);pp=pages[pi];pp.rn=rn;pp.src=srcRec;pp.sn=i;pp.pt=[v1.width,v1.height];if(i===1)await ensure(pp);
             ok=true;
           }
         }else{
@@ -933,14 +934,30 @@ async function buildPdf(list,f0,f1,label){
   list.forEach(x=>{if(x!==P())release(x)});ld(label,f1,'إنهاء الملف');await tick();return doc.output('blob');
 }
 async function renderAll(){const L=pages.filter(p=>p.lazy);for(let i=0;i<L.length;i++){const f=L[i].lazy;L[i].lazy=null;ld('جاري تجهيز الصفحات…',.3*i/L.length,'صفحة '+(i+1)+' من '+pages.length);await tick();await f()}}
+async function buildPdfLib(list,f0,f1,label){
+  const {PDFDocument}=PDFLib,out=await PDFDocument.create(),srcs=new Map();let i=0;
+  while(i<list.length){
+    const p=list[i];ld(label,f0+(f1-f0)*i/list.length,'صفحة '+(i+1)+' من '+list.length);await tick();
+    if(p.src&&!p.src.bad&&!p.objs.length){
+      let j=i;const idx=[];while(j<list.length&&list[j].src===p.src&&!list[j].objs.length){idx.push(list[j].sn-1);j++}
+      try{let sd=srcs.get(p.src);if(!sd){sd=await PDFDocument.load(p.src.bytes,{ignoreEncryption:true,updateMetadata:false});srcs.set(p.src,sd)}
+        (await out.copyPages(sd,idx)).forEach(c=>out.addPage(c));i=j;continue}catch(e){p.src.bad=true}
+    }
+    await ensure(p);const jb=await blobOf(comp(p),'image/jpeg',.9),img=await out.embedJpg(new Uint8Array(await jb.arrayBuffer())),W=p.pt?p.pt[0]:p.w*.75,H=p.pt?p.pt[1]:p.h*.75,pg=out.addPage([W,H]);
+    pg.drawImage(img,{x:0,y:0,width:W,height:H});if(p!==P())release(p);i++;
+  }
+  ld(label,f1,'إنهاء الملف');await tick();
+  return new Blob([await out.save()],{type:'application/pdf'});
+}
+const mkPdf=(list,a,b,l)=>window.PDFLib?buildPdfLib(list,a,b,l):buildPdf(list,a,b,l);
 async function runExport(name,fn){commitText();try{const b=await fn();ld('اكتمل التجهيز',1,'جاهز للحفظ');await tick();ldHide();await save(name,b)}catch(e){ldHide();toast('تعذّر التصدير')}}
 const exImg=type=>runExport('رسمي.'+EXT[type],async()=>{ld('جاري تجهيز الصورة…',.2,'');await tick();const b=await blobOf(comp(P()),type,.95);ld('جاري تجهيز الصورة…',.9,'');return b});
-const exPdf=list=>{if(!window.jspdf){toast('مكتبة PDF غير محمّلة');return}runExport('رسمي.pdf',()=>buildPdf(list,0,.97,'جاري تجهيز PDF…'))};
+const exPdf=list=>{if(!window.jspdf){toast('مكتبة PDF غير محمّلة');return}runExport('رسمي.pdf',()=>mkPdf(list,0,.97,'جاري تجهيز PDF…'))};
 const exZip=(type,withPdf)=>{
   if(!window.JSZip||(withPdf&&!window.jspdf)){toast('مكتبة ZIP غير محمّلة — أعد تحميل الصفحة');return}
   runExport(withPdf?'رسمي-كل-شيء.zip':'رسمي-صور.zip',async()=>{const z=new JSZip(),n=pages.length,span=withPdf?.55:.9;
     for(let i=0;i<n;i++){ld('جاري تجهيز الصور…',span*i/n,'صفحة '+(i+1)+' من '+n);await tick();if(i>0&&pages[i-1]!==P())release(pages[i-1]);await ensure(pages[i]);z.file((withPdf?'الصور/':'')+'صفحة-'+String(i+1).padStart(3,'0')+'.'+EXT[type],await blobOf(comp(pages[i]),type,.95))}
-    pages.forEach(x=>{if(x!==P())release(x)});if(withPdf)z.file('المستند.pdf',await buildPdf(pages,span,.9,'جاري تجهيز PDF…'));
+    pages.forEach(x=>{if(x!==P())release(x)});if(withPdf)z.file('المستند.pdf',await mkPdf(pages,span,.9,'جاري تجهيز PDF…'));
     return z.generateAsync({type:'blob',compression:'STORE'},m=>ld('جاري إنشاء ZIP…',.9+m.percent/1000,Math.round(m.percent)+'%'))})};
 const bind=(id,fn)=>{const b=$('#'+id);if(b)b.onclick=()=>{menu.style.display='none';fn()}};
 bind('bPng',()=>exImg('image/png'));bind('bJpg',()=>exImg('image/jpeg'));bind('bPdf1',()=>exPdf([P()]));bind('bPdf',()=>exPdf(pages));
